@@ -1,0 +1,7 @@
+get==0.0.11
+post==0.0.8
+public==0.0.33
+query-string==0.0.8
+request==0.0.8
+requests==2.10.0
+spotipy==2.3.8
