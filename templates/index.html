@@ -1,0 +1,12 @@
+{% extends "master.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block body %}
+<div id="centerdiv">
+    <form action="." method="POST">
+        <input id="artistname" type="text" name="text" placeholder="Artist Name" autocomplete="off"><br>
+        <input id="button" type="submit" name="my-form" value="DIVE!!">
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "master.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block body %}
+<div id="centerdiv">
+    <a href="{{html_auth}}">Generate a Playlist</a><br>
+    {% for artist in ids %}
+        {{artist[1]}}<br>
+        |<br>
+    {% endfor %}
+</div>    
+{% endblock %}
