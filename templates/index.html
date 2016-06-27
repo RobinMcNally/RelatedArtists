@@ -4,9 +4,13 @@
 
 {% block body %}
 <div id="centerdiv">
+    {% if playlistlink %}
+    Check out your new playlist <a href="{{playlistlink}}">here</a><br>
+    Or Search for a new set<br>
+    {% endif %}
     <form action="." method="POST">
         <input id="artistname" type="text" name="text" placeholder="Artist Name" autocomplete="off"><br>
-        <input id="button" type="submit" name="my-form" value="DIVE!!">
+        <input id="button" type="submit" name="my-form" value="DIVE">
     </form>
 </div>
 {% endblock %}

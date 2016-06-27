@@ -28,30 +28,30 @@ h1 {
 
 #button {
     background-color: #aaaaaa;
-    border-radius: 5px;
+    border-radius: 13px;
     border: 0px;
     width: 150px;
     height: 40px;
 }
 
 #centerdiv {
-    font-size: 1.5em;
-    max-width: 300px;
+    font-size: 3em;
+    max-width: 600px;
     max-height: 300px;
     position: absolute;
     top:0;
     bottom: 0;
     left: 0;
     right: 0;
-
     margin: auto;
     vertical-align: middle;
 }
 
 input[type=text] {
-  height: 20px;
+  font-size: 1em;
+  height: 60px;
   border: 0;
-  width: calc(100% - 2px);
+  width: calc(80% - 2px);
   margin-left:1px;
   box-shadow: -8px 10px 0px -7px #ebebeb, 8px 10px 0px -7px #ebebeb;
   -webkit-transition: box-shadow 0.3s;

@@ -42,11 +42,9 @@ def get_artist_top_tracks(artistID):
     with urllib.request.urlopen(req) as response:
         the_page = response.read()
         data = json.loads(the_page.decode('utf-8'))
-    print(the_page)
 
 def get_related_artist(artistID):
     artistInfo = []
-    print(artistID)
     results = spotify.artist_related_artists(artistID)
     rel_len = len(results["artists"])
     index = random.randrange(rel_len)
@@ -54,17 +52,12 @@ def get_related_artist(artistID):
     artistInfo.append(results["artists"][index]["name"])
     return artistInfo
 
-def populate_playlist(userID, playlistInfo, songlist):
-    print("placeholder")
-
 def create_playlist(userID):
     url = "https://api.spotify.com/v1/users/" + userID + "/playlists"
 
 def spotify_authenticate():
     url.add_header("Authorization", "Basic " + client_id + ":" + client_secret)
-    print(url)
     responseData = urllib.request.urlopen(url)
-    print(responseData)
 
 def generate_list(name):
     artistInfo = find_artist(name)
@@ -96,13 +89,13 @@ def index():
     """
     credentials = auth.SpotifyClientCredentials(client_id, client_secret)
     send_url_request(acc.get_authorize_url())
-    print(credentials.get_access_token())
 
     return flask.render_template('index.html')
 
 @APP.route('/', methods=['POST'])
 def my_form_post():
     text = request.form['text']
+    global IDs
     IDs = generate_list(text)
     return flask.render_template('display.html', ids=IDs, html_auth=acc.get_authorize_url())
     return ""
@@ -122,14 +115,22 @@ def callback():
             access_token = token_info['access_token']
     if access_token:
         sp = spotipy.Spotify(access_token)
-        playlistID = sp.user_playlist_create("relatedartistbot", "test")['id']
-        print(playlistID)
+        artiststring = "" 
+        global IDs
+        counter = 0
+        for artist in IDs:
+            artiststring += artist[1]
+            if counter < len(IDs) - 1:
+                counter += 1
+                artiststring += ", "
+        playlistID = sp.user_playlist_create("relatedartistbot", artiststring)['id']
         tracks = []
         for artist in IDs:
-            for song in sp.artist_top_tracks(artist[0])['tracks'][:10]:
+            for song in sp.artist_top_tracks(artist[0])['tracks'][:5]:
                 tracks.append(song['id'])
-        results = sp.current_user()
-        return results
+        sp.user_playlist_add_tracks("relatedartistbot", playlistID, tracks)
+        playlisturl = "http://open.spotify.com/user/relatedartistbot/playlist/" + playlistID
+        return flask.render_template('result.html', playlistlink=playlisturl)
     return ""
 
 if __name__ == "__main__":
