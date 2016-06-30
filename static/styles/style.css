@@ -1,14 +1,16 @@
 html {
-    background-color: #303030;
+    background-color: #202020;
     height: 100%;
+    padding: 0px;
 }
 
 body {
-    font-family: Changa;
+    font-family: Orbitron, sans-serif;
     background-color: #353535;
     color: #DDDDDD;
     border-radius: 5px;
     margin: 0px auto;
+    padding-top: 20px;
     max-width: 900px;
     height: 100%;
     text-align: center;
@@ -16,7 +18,9 @@ body {
 
 h1 {
     color: #DDDDDD;
-    margin: 0px;
+    margin-top: 0px;
+    margin-bottom: 40px;
+    font-size: 3em;
 }
 
 #artistname {
@@ -27,6 +31,8 @@ h1 {
 }
 
 #button {
+    font-family: Orbitron, sans-serif;
+    font-size: 1em;
     background-color: #aaaaaa;
     border-radius: 13px;
     border: 0px;
@@ -35,8 +41,8 @@ h1 {
 }
 
 #centerdiv {
-    font-size: 3em;
-    max-width: 600px;
+    font-size: 1em;
+    max-width: 300px;
     max-height: 300px;
     position: absolute;
     top:0;
@@ -48,16 +54,16 @@ h1 {
 }
 
 input[type=text] {
-  font-size: 1em;
-  height: 60px;
-  border: 0;
-  width: calc(80% - 2px);
-  margin-left:1px;
-  box-shadow: -8px 10px 0px -7px #ebebeb, 8px 10px 0px -7px #ebebeb;
-  -webkit-transition: box-shadow 0.3s;
-  transition: box-shadow 0.3s;
+    font-family: Orbitron, sans-serif;
+    font-size: 1em;
+    border: 0;
+    width: calc(90% - 2px);
+    margin-bottom: 10px;
+    box-shadow: -8px 10px 0px -7px #ebebeb, 8px 10px 0px -7px #ebebeb;
+    -webkit-transition: box-shadow 0.3s;
+    transition: box-shadow 0.3s;
 }
 input[type=text]:focus {
-  outline: none;
-  box-shadow: -8px 10px 0px -7px #4EA6EA, 8px 10px 0px -7px #4EA6EA;
+    outline: none;
+    box-shadow: -8px 10px 0px -7px #4EA6EA, 8px 10px 0px -7px #4EA6EA;
 }
