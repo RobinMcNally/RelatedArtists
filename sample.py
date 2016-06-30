@@ -32,6 +32,10 @@ ACCESS = auth.SpotifyOAuth(
 
 def find_artist(name):
     """Given a text string search for an artist that closly matches it"""
+    if type(name) is not str:
+        return None
+    if name == "":
+        return None
     formattedname = name.replace(" ", "+")
     results = SPOTIFY.search(q='artist:' + formattedname, type="artist")
     artist_info = []
@@ -49,21 +53,21 @@ def get_related_artist(artist_id):
     artist_info.append(results["artists"][artist_index]["name"])
     return artist_info
 
-def generate_artist_string():
+def generate_artist_string(ids):
     """Generate a readable representation of the chosen artists"""
     artiststring = ""
     counter = 0
-    for artist in IDS:
+    for artist in ids:
         artiststring += artist[1]
-        if counter < len(IDS) - 1:
+        if counter < len(ids) - 1:
             counter += 1
             artiststring += ", "
     return artiststring
 
-def generate_artist_id_list(user_authenticated_wrapper):
+def generate_artist_id_list(user_authenticated_wrapper, ids):
     """Generate a list of artist ids"""
     tracks = []
-    for artist in IDS:
+    for artist in ids:
         for song in user_authenticated_wrapper.artist_top_tracks(artist[0])['tracks'][:5]:
             tracks.append(song['id'])
     return tracks
@@ -83,11 +87,11 @@ def create_playlist():
             access_token = token_info['access_token']
     if access_token:
         user_authenticated_wrapper = spotipy.Spotify(access_token)
-        artiststring = generate_artist_string()
+        artiststring = generate_artist_string(IDS)
         playlist_id = user_authenticated_wrapper.user_playlist_create(
             "relatedartistbot",
             artiststring)['id']
-        tracks = generate_artist_id_list(user_authenticated_wrapper)
+        tracks = generate_artist_id_list(user_authenticated_wrapper, IDS)
         user_authenticated_wrapper.user_playlist_add_tracks(
             user_authenticated_wrapper.me()['id'],
             playlist_id, tracks)
