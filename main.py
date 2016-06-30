@@ -1,138 +1,155 @@
-import json
-import urllib.request, urllib.parse, urllib.error
+"""Application to host a website that displays related artists on spotify"""
+import urllib.request
+import urllib.parse
+import urllib.error
 import flask
 from flask import request
-import socket
-import random
 import spotipy
-import spotipy.util as util
 import spotipy.oauth2 as auth
 from secrets import client_id, client_secret
+import random
 
 
 #############################
 # Magical list of things
 #
 # Must do:
-#   Refactor from raw url requests to wrapper
-#   Generate http and webpage from results
+#   Error Page
 #
-# Possible:
-#   Genereate User Playlists
 #
 #############################
 
 CACHE = '.spotipyoauthcache'
 APP = flask.Flask(__name__)
-spotify = spotipy.Spotify()
-IDs = []
-acc = auth.SpotifyOAuth(client_id, client_secret, "http://localhost:8080/callback/q", scope="playlist-modify-public", cache_path=CACHE)
+SPOTIFY = spotipy.Spotify()
+IDS = []
+ACCESS = auth.SpotifyOAuth(
+    client_id,
+    client_secret,
+    "http://localhost:8080/callback/q",
+    scope="playlist-modify-public",
+    cache_path=CACHE)
 
 def find_artist(name):
+    """Given a text string search for an artist that closly matches it"""
     formattedname = name.replace(" ", "+")
-    results = spotify.search(q='artist:' + formattedname, type="artist")
-    artistInfo = []
-    artistInfo.append(results["artists"]["items"][0]["id"])
-    artistInfo.append(results["artists"]["items"][0]["name"])
-    return artistInfo
+    results = SPOTIFY.search(q='artist:' + formattedname, type="artist")
+    artist_info = []
+    artist_info.append(results["artists"]["items"][0]["id"])
+    artist_info.append(results["artists"]["items"][0]["name"])
+    return artist_info
 
-def get_artist_top_tracks(artistID):
-    url = "https://api.spotify.com/v1/artists/" + artistInfo + "/top-tracks"
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req) as response:
-        the_page = response.read()
-        data = json.loads(the_page.decode('utf-8'))
-
-def get_related_artist(artistID):
-    artistInfo = []
-    results = spotify.artist_related_artists(artistID)
+def get_related_artist(artist_id):
+    """Select a random related artist to the given artist"""
+    artist_info = []
+    results = SPOTIFY.artist_related_artists(artist_id)
     rel_len = len(results["artists"])
-    index = random.randrange(rel_len)
-    artistInfo.append(results["artists"][index]["id"])
-    artistInfo.append(results["artists"][index]["name"])
-    return artistInfo
+    artist_index = random.randrange(rel_len)
+    artist_info.append(results["artists"][artist_index]["id"])
+    artist_info.append(results["artists"][artist_index]["name"])
+    return artist_info
 
-def create_playlist(userID):
-    url = "https://api.spotify.com/v1/users/" + userID + "/playlists"
+def generate_artist_string():
+    """Generate a readable representation of the chosen artists"""
+    artiststring = ""
+    counter = 0
+    for artist in IDS:
+        artiststring += artist[1]
+        if counter < len(IDS) - 1:
+            counter += 1
+            artiststring += ", "
+    return artiststring
 
-def spotify_authenticate():
-    url.add_header("Authorization", "Basic " + client_id + ":" + client_secret)
-    responseData = urllib.request.urlopen(url)
+def generate_artist_id_list(user_authenticated_wrapper):
+    """Generate a list of artist ids"""
+    tracks = []
+    for artist in IDS:
+        for song in user_authenticated_wrapper.artist_top_tracks(artist[0])['tracks'][:5]:
+            tracks.append(song['id'])
+    return tracks
 
-def generate_list(name):
-    artistInfo = find_artist(name)
-    ids = [] 
-    ids.append(artistInfo)
-    for i in range(4):
-        relatedID = get_related_artist(artistInfo[0])
-        while relatedID in ids:
-            relatedID = get_related_artist(artistInfo[0])
-        ids.append(relatedID)
-        artistInfo = relatedID
-    return ids
-
-def send_url_request(url):
-    req = urllib.request.Request(url)
-    urllib.request.urlopen(req)
-
-def main():
-    APP.run(debug=True, use_reloader=False, port=8080, host='')
-
-
-
-def html_for_auth():
-    return "<a href='" + acc.get_authorize_url() + "'>Generate A Playlist</a>"
-
-@APP.route('/')
-def index():
-    """ Displays the index page accessible at '/'
-    """
-    credentials = auth.SpotifyClientCredentials(client_id, client_secret)
-    send_url_request(acc.get_authorize_url())
-
-    return flask.render_template('index.html')
-
-@APP.route('/', methods=['POST'])
-def my_form_post():
-    text = request.form['text']
-    global IDs
-    IDs = generate_list(text)
-    return flask.render_template('display.html', ids=IDs, html_auth=acc.get_authorize_url())
-    return ""
-
-@APP.route('/callback/q')
-def callback():
+def create_playlist():
+    """Create and fill a playlist with songs from the selected artists"""
     access_token = ""
-    token_info = acc.get_cached_token()
+    token_info = ACCESS.get_cached_token()
 
     if token_info:
         access_token = token_info['access_token']
     else:
         url = request.url
-        code = acc.parse_response_code(url)
+        code = ACCESS.parse_response_code(url)
         if code:
-            token_info = acc.get_access_token(code)
+            token_info = ACCESS.get_access_token(code)
             access_token = token_info['access_token']
     if access_token:
-        sp = spotipy.Spotify(access_token)
-        artiststring = "" 
-        global IDs
-        counter = 0
-        for artist in IDs:
-            artiststring += artist[1]
-            if counter < len(IDs) - 1:
-                counter += 1
-                artiststring += ", "
-        playlistID = sp.user_playlist_create("relatedartistbot", artiststring)['id']
-        tracks = []
-        for artist in IDs:
-            for song in sp.artist_top_tracks(artist[0])['tracks'][:5]:
-                tracks.append(song['id'])
-        sp.user_playlist_add_tracks("relatedartistbot", playlistID, tracks)
-        playlisturl = "http://open.spotify.com/user/relatedartistbot/playlist/" + playlistID
+        user_authenticated_wrapper = spotipy.Spotify(access_token)
+        artiststring = generate_artist_string()
+        playlist_id = user_authenticated_wrapper.user_playlist_create(
+            "relatedartistbot",
+            artiststring)['id']
+        tracks = generate_artist_id_list(user_authenticated_wrapper)
+        user_authenticated_wrapper.user_playlist_add_tracks(
+            user_authenticated_wrapper.me()['id'],
+            playlist_id, tracks)
+        playlisturl = "http://open.spotify.com/user/relatedartistbot/playlist/" + playlist_id
+        return playlisturl
+    return False
+
+def generate_list(name):
+    """Generates a list of artist ids for populating playlist"""
+    artist_info = find_artist(name)
+    ids = []
+    ids.append(artist_info)
+    for _ in range(4):
+        related_id = get_related_artist(artist_info[0])
+        while related_id in ids:
+            related_id = get_related_artist(artist_info[0])
+        ids.append(related_id)
+        artist_info = related_id
+    return ids
+
+def send_url_request(url):
+    """Quick url sending function REMOVE ME"""
+    req = urllib.request.Request(url)
+    urllib.request.urlopen(req)
+
+def main():
+    """Nothing much here, just spinning up a server"""
+    APP.run(debug=True, use_reloader=False, port=8080, host='')
+
+def html_for_auth():
+    """Generate the html that will be inserted into the page"""
+    return "<a href='" + ACCESS.get_authorize_url() + "'>Generate A Playlist</a>"
+
+@APP.route('/')
+def index():
+    """ Displays the index page accessible at '/'
+    """
+    auth.SpotifyClientCredentials(client_id, client_secret)
+    send_url_request(ACCESS.get_authorize_url())
+
+    return flask.render_template('index.html')
+
+@APP.route('/', methods=['POST'])
+def my_form_post():
+    """ Respond to user form post then display page
+        with results
+    """
+    text = request.form['text']
+    global IDS
+    IDS = generate_list(text)
+    return flask.render_template('display.html', ids=IDS, html_auth=ACCESS.get_authorize_url())
+
+@APP.route('/callback/q')
+def callback():
+    """ Will be called when spotify calls back
+        with the user's authentication
+    """
+    playlisturl = create_playlist()
+    if not playlisturl:
+        return "callback broken"
+    else:
         return flask.render_template('result.html', playlistlink=playlisturl)
-    return ""
 
 if __name__ == "__main__":
     main()
-
